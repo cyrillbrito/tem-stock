@@ -5,7 +5,9 @@
     "start": "tsc && node dist/clients/cli/app.js -f 'dist/prods.txt'",
     "telegram": "tsc && node dist/clients/telegram/telegram.js",
     "temp": "tsc && node dist/core/shops/pc-componentes.js",
-    "build": "tsc"
+    "build": "tsc",
+    "docker-build": "docker build -t tem-stock .",
+    "docker-run": "docker run -d -v ./persistent:/usr/src/app/persistent tem-stock:latest"
   },
   "dependencies": {
     "chalk": "^2.4.2",

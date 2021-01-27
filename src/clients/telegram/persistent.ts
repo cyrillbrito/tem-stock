@@ -15,12 +15,9 @@ let persistent: PersistentData;
 export async function loadPersistent(): Promise<PersistentData> {
   if (!persistent) {
     try {
-      persistent = JSON.parse((await fs.readFile('./persistent.json')).toString());
+      persistent = JSON.parse((await fs.readFile('./persistent/data.json')).toString());
     } catch {
-      persistent = {
-        lastUpdateId: 0,
-        chats: {}
-      };
+      throw new Error('No persistent data file');
     }
   }
   return persistent;
@@ -28,5 +25,5 @@ export async function loadPersistent(): Promise<PersistentData> {
 
 export async function savePersistent(data: PersistentData): Promise<void> {
   persistent = data;
-  await fs.writeFile('./persistent.json', JSON.stringify(data));
+  await fs.writeFile('./persistent/data.json', JSON.stringify(data));
 }
