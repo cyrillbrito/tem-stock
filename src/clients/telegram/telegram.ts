@@ -97,45 +97,45 @@ setConfigEnvironment('local');
 setInterval(() => processUpdates(), 3000);
 
 // TODO: Find better ways of storing or managing this data
-setStockCheckInterval(async () => {
+// setStockCheckInterval(async () => {
 
-  const db = await loadPersistent();
-  const productsUrls: string[] = [];
+//   const db = await loadPersistent();
+//   const productsUrls: string[] = [];
 
-  for (const chat in db.chats) {
-    if (chat in db.chats) {
-      const products = db.chats[chat];
-      for (const p of products) {
-        if (!productsUrls.includes(p.url)) {
-          productsUrls.push(p.url);
-        }
-      }
-    }
-  }
+//   for (const chat in db.chats) {
+//     if (chat in db.chats) {
+//       const products = db.chats[chat];
+//       for (const p of products) {
+//         if (!productsUrls.includes(p.url)) {
+//           productsUrls.push(p.url);
+//         }
+//       }
+//     }
+//   }
 
 
-  console.log("productsUrls", productsUrls);
-  return productsUrls;
+//   console.log("productsUrls", productsUrls);
+//   return productsUrls;
 
-}, async (productUrl, inStock) => {
+// }, async (productUrl, inStock) => {
 
-  const db = await loadPersistent();
+//   const db = await loadPersistent();
 
-  for (const chat in db.chats) {
-    if (chat in db.chats) {
-      const products = db.chats[chat];
-      for (const product of products) {
-        if (product.url === productUrl) {
-          if (product.inStock && !inStock) {
-            product.inStock = false;
-            savePersistent(db);
-          } else if (!product.inStock && inStock) {
-            sendMessage({ chat_id: Number(chat), text: product.url });
-            product.inStock = true;
-            savePersistent(db);
-          }
-        }
-      }
-    }
-  }
-});
+//   for (const chat in db.chats) {
+//     if (chat in db.chats) {
+//       const products = db.chats[chat];
+//       for (const product of products) {
+//         if (product.url === productUrl) {
+//           if (product.inStock && !inStock) {
+//             product.inStock = false;
+//             savePersistent(db);
+//           } else if (!product.inStock && inStock) {
+//             sendMessage({ chat_id: Number(chat), text: product.url });
+//             product.inStock = true;
+//             savePersistent(db);
+//           }
+//         }
+//       }
+//     }
+//   }
+// });

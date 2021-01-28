@@ -1,4 +1,4 @@
-import { promises as fs } from 'fs';
+import { Firestore } from '@google-cloud/firestore';
 
 export interface PersistentData {
   lastUpdateId: number
@@ -10,20 +10,15 @@ export interface Product {
   inStock?: boolean;
 }
 
-let persistent: PersistentData;
+
+const docRef = new Firestore().collection('main').doc('main');
 
 export async function loadPersistent(): Promise<PersistentData> {
-  if (!persistent) {
-    try {
-      persistent = JSON.parse((await fs.readFile('./persistent/data.json')).toString());
-    } catch {
-      throw new Error('No persistent data file');
-    }
-  }
-  return persistent;
+  const doc = await docRef.get();
+  const data: PersistentData = (await doc.data()) as PersistentData ?? { lastUpdateId: 999999999999999999999999, chats: {} };
+  return data;
 }
 
 export async function savePersistent(data: PersistentData): Promise<void> {
-  persistent = data;
-  await fs.writeFile('./persistent/data.json', JSON.stringify(data));
+  docRef.set(data);
 }

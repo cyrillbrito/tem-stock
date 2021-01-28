@@ -1,3 +1,4 @@
 dist/
 node_modules/
 environment/local.json
+environment/prod.json

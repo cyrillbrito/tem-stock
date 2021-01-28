@@ -1,18 +1,19 @@
 {
   "name": "tem-stock",
   "version": "0.0.1",
+  "main": "dist/clients/functions/app.js",
   "scripts": {
     "start": "tsc && node dist/clients/cli/app.js -f 'dist/prods.txt'",
     "telegram": "tsc && node dist/clients/telegram/telegram.js",
     "temp": "tsc && node dist/core/shops/pc-componentes.js",
     "build": "tsc",
-    "docker-build": "docker build -t tem-stock .",
-    "docker-run": "docker run -d -v ./persistent:/usr/src/app/persistent tem-stock:latest"
+    "deploy": "tsc & gcloud functions deploy telegramUpdate --runtime nodejs14 --trigger-http"
   },
   "dependencies": {
+    "@google-cloud/firestore": "^4.9.1",
+    "@types/node": "^14.14.22",
     "chalk": "^2.4.2",
     "commander": "^7.0.0",
-    "playwright-chromium": "~1.7.1",
     "typescript": "^4.1.3"
   },
   "devDependencies": {
