@@ -1,5 +1,7 @@
 // import { chromium, Page } from "playwright-chromium";
-import { getBooleanConfig, getNumberConfig } from "../clients/telegram/configuration";
+import { getBooleanConfig, getNumberConfig } from "../utils/configuration";
+import { isPcComponentes, pcComponentesProductName } from "./pc-componentes";
+import { isPcdiga, pcdigaProductName } from "./pcdiga";
 // import { singleCheckGlobalData } from "./shops/globaldata";
 // import { singleCheckNovoAtalho } from "./shops/novo-atalho";
 // import { singleCheckPcComponentes } from "./shops/pc-componentes";
@@ -32,9 +34,23 @@ export async function setStockCheckInterval(getProducts: () => Promise<string[]>
 // TODO: Find better way to do this
 // export async function checkProduct(productUrl: string, page: Page): Promise<boolean> {
 //   let result = false;
-  // result = result || await singleCheckPcdiga(productUrl, page);
-  // result = result || await singleCheckGlobalData(productUrl, page);
-  // result = result || await singleCheckNovoAtalho(productUrl, page);
-  // result = result || await singleCheckPcComponentes(productUrl, page);
+// result = result || await singleCheckPcdiga(productUrl, page);
+// result = result || await singleCheckGlobalData(productUrl, page);
+// result = result || await singleCheckNovoAtalho(productUrl, page);
+// result = result || await singleCheckPcComponentes(productUrl, page);
 //   return result;
 // }
+
+
+export function productInfoByUrl(url: string): [string, string] {
+
+  if (isPcdiga(url)) {
+    return pcdigaProductName(url);
+  }
+
+  if (isPcComponentes(url)) {
+    return pcComponentesProductName(url);
+  }
+
+  return ['', ''];
+}

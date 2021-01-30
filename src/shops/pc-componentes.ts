@@ -28,3 +28,13 @@
 //     return true;
 //   }
 // }
+
+export function isPcComponentes(url: string): boolean {
+  return url.startsWith('https://www.pccomponentes.pt');
+}
+
+export function pcComponentesProductName(url: string): [string, string] {
+  const ss = url.split('/');
+  const name = ss[ss.length - 1].split('?')[0];
+  return ['pccomponentes.pt', name];
+}

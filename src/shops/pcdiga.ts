@@ -35,3 +35,15 @@
 //     return true;
 //   }
 // }
+
+
+
+export function isPcdiga(url: string): boolean {
+  return url.startsWith('https://www.pcdiga.com');
+}
+
+export function pcdigaProductName(url: string): [string, string] {
+  const ss = url.split('/');
+  const name = ss[ss.length - 1].split('?')[0];
+  return ['pcdiga.com', name];
+}
