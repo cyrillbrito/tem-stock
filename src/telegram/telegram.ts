@@ -1,6 +1,6 @@
 import { Chat, firestore, getChat, getProduct, Product } from '../persistent/telegram-update';
 import { productInfoByUrl } from '../shops/shops';
-import { getStringConfig, setConfigEnvironment } from '../utils/configuration';
+import { getStringConfig } from '../utils/configuration';
 import { get, post } from '../utils/http';
 import { Message, SendMessage, Update } from './models';
 
@@ -17,13 +17,20 @@ export async function processUpdate(update: Update): Promise<void> {
     await removeProduct(update);
   } else if (update.message.text.startsWith('/shops')) {
     await shops(update);
+  } else if (update.message.text.startsWith('/help')) {
+    await help(update);
   }
 }
 
 async function products(update: Update): Promise<void> {
 
   const chatId = update.message.chat.id.toString();
-  const chat = (await firestore.collection('chats').doc(chatId).get()).data() as Chat;
+  const chat = (await firestore.collection('chats').doc(chatId)?.get())?.data() as Chat;
+
+  if (!chat?.products?.length) {
+    reply(update.message, 'No products yet.');
+    return;
+  }
 
   const docs = await firestore.getAll(...chat.products)
 
@@ -46,7 +53,7 @@ async function products(update: Update): Promise<void> {
       message += `*\\-\\- ${shopName.replace('.', '\\.')}*\n`;
       for (const product of groupedByShop[shopName]) {
         message += `\\- [${product.name.replace(/-/g, '\\-')}](${product.url.replace(/-/g, '\\-').replace(/\./g, '\\.')}) `;
-        message += `${Math.random() > 0.5 ? '\\**IN STOCK*\\*' : 'no stock'}\n`;
+        message += `${Math.random() > 0.5 ? '\\.\\:\\.IN STOCK\\.\\:\\.' : 'no stock'}\n`;
       }
       message += '\n';
     }
@@ -60,7 +67,7 @@ async function addProduct(update: Update): Promise<void> {
   console.log('Replaying to /addproduct');
 
   const productUrl = update.message.text.replace('/addproduct ', '');
-  const { shop: shopName, product: productName, url: cleanUrl } = productInfoByUrl(productUrl);
+  const { shop: shopName, product: productName, url: cleanUrl } = productInfoByUrl(productUrl) || {};
 
   if (!shopName) {
     reply(update.message, 'The product shop is not supported');
@@ -93,7 +100,7 @@ async function removeProduct(update: Update): Promise<void> {
   const chatId = update.message.chat.id.toString();
   const productUrl = update.message.text.replace('/removeproduct ', '');
 
-  const { shop: shopName, product: productName } = productInfoByUrl(productUrl);
+  const { shop: shopName, product: productName } = productInfoByUrl(productUrl) || {};
   if (!shopName) {
     reply(update.message, 'The product shop is not supported');
     return;
@@ -105,6 +112,8 @@ async function removeProduct(update: Update): Promise<void> {
     return;
   }
 
+  const [chatRef, chat] = await getChat(update.message.chat.id);
+
   if (product.chats.length === 1) {
     await productRef.delete();
   } else {
@@ -112,8 +121,6 @@ async function removeProduct(update: Update): Promise<void> {
     product.chats.splice(index, 1);
     productRef.set(product);
   }
-
-  const [chatRef, chat] = await getChat(update.message.chat.id);
 
   const productIndex = chat.products.findIndex(ref => ref.id === productName && ref.parent.parent.id === shopName);
   chat.products.splice(productIndex, 1);
@@ -131,6 +138,20 @@ async function shops(update: Update): Promise<void> {
   text += '\n\n*PcComponentes* product url example:\nhttps://www\\.pccomponentes\\.pt/evga\\-geforce\\-rtx\\-3060\\-ti\\-xc\\-8gb\\-gddr6';
   reply(update.message, text, true);
 }
+
+async function help(update: Update): Promise<void> {
+  console.log('Replaying to /help');
+  let text = '*What does the bot do\\?*';
+  text += '\n\nThis bot allows you to set a products watch lists and every time any of those products has stock you will be notified\\.';
+  text += '\n\n*How to make it work\\?*';
+  text += '\n\nFor the bot to work you need to add products to the watch list\\.';
+  text += '\n\nTo do this you can use the command \\/addproduct product\\-url\\.';
+  text += '\n\nBe careful because not all shop websites work\\, use \\/shops to see the supported shops\\.';
+  text += '\n\nTo remove a product from the watch list use \\/removeproduct product\\-url\\.';
+  text += '\n\nTo see the current watch list use \\/products\\.';
+  reply(update.message, text, true);
+}
+
 
 async function reply(message: Message, text: string, markdown?: boolean): Promise<void> {
 

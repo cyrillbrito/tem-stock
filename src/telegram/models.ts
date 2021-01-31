@@ -33,3 +33,12 @@ export interface SetWebhook {
   url: string;
   drop_pending_updates: boolean
 }
+
+export interface SetMyCommands {
+  commands: BotCommand[];
+}
+
+export interface BotCommand {
+  command: string;
+  description: string;
+}

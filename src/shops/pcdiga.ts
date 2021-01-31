@@ -1,42 +1,5 @@
-// import { OptionValues } from 'commander';
-// import { Page } from 'playwright-chromium';
-// import { logProduct, logProductInStock, logProductNoStock, logProductNotFound } from '../../logger';
-
-// export async function check(products: string[], page: Page, options: OptionValues): Promise<void> {
-//   for (const product of products) {
-//     await singleCheckPcdiga(product, page);
-//     await page.waitForTimeout(options.interval * 1000);
-//   }
-// }
-
-// // TODO: do not use playwright
-// // TODO: maybe the categorization of the product should be done before
-// export async function singleCheckPcdiga(product: string, page: Page): Promise<boolean> {
-
-//   if (!product.includes('https://www.pcdiga.com/')) {
-//     return false;
-//   }
-
-//   const name = product.replace('https://www.pcdiga.com/', 'PCDIGA > ').replace(/-/g, ' ');
-//   logProduct(name);
-
-//   await page.goto(product);
-//   const element = await page.$('#skrey_estimate_date_product_page_wrapper');
-//   const text = await element?.innerText();
-
-//   if (!text) {
-//     logProductNotFound();
-//     return false;
-//   } else if (text.trim() === 'Sem stock') {
-//     logProductNoStock();
-//     return false;
-//   } else {
-//     logProductInStock();
-//     return true;
-//   }
-// }
-
-
+import axios from 'axios';
+import { load } from 'cheerio';
 
 export function isPcdiga(url: string): boolean {
   return url.startsWith('https://www.pcdiga.com');
@@ -49,3 +12,19 @@ export function pcdigaProductInfo(url: string): { shop: string, product: string,
   const newUrl = shop + '/' + product;
   return { shop, product, url: newUrl };
 }
+
+export async function pcdigaProductHasStock(url: string): Promise<boolean> {
+
+  const response = await axios.get(url);
+  const $ = load(response.data);
+
+  const element = $('#skrey_estimate_date_product_page_wrapper');
+  const text = element.text().trim();
+
+  // console.log(text);
+  // console.log(text !== 'Sem stock');
+
+  return text !== 'Sem stock';
+}
+
+// pcdigaProductHasStock('https://www.pcdiga.com/placa-grafica-gigabyte-geforce-rtx-3060-ti-eagle-8gb-gddr6-gvn306teo-00-g');

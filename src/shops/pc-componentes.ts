@@ -1,33 +1,11 @@
-// import { Page } from 'playwright-chromium';
-// import { logProduct, logProductInStock, logProductNoStock, logProductNotFound } from '../../logger';
+import axios from 'axios';
+import { load } from 'cheerio';
 
-// // TODO: maybe the categorization of the product should be done before
-// export async function singleCheckPcComponentes(product: string, page: Page): Promise<boolean> {
-
-//   if (!product.includes('https://www.pccomponentes.pt/')) {
-//     return false;
-//   }
-
-//   const name = product.replace('https://www.pccomponentes.pt/', 'PcComponentes > ').replace(/-/g, ' ');
-//   logProduct(name);
-
-//   await page.goto(product);
-//   const element = (await page.$$('#articleOutOfStock > div'))[1];
-//   const text = await element?.innerText();
-
-//   console.log(`^${text}^`);
-
-//   if (!text) {
-//     logProductNotFound();
-//     return false;
-//   } else if (text.trim() === 'Sem data exata de entrega') {
-//     logProductNoStock();
-//     return false;
-//   } else {
-//     logProductInStock();
-//     return true;
-//   }
-// }
+interface PriceAvailabilityResponse {
+  availability: {
+    status: string;
+  };
+}
 
 export function isPcComponentes(url: string): boolean {
   return url.startsWith('https://www.pccomponentes.pt');
@@ -40,3 +18,19 @@ export function pcComponentesProductName(url: string): { shop: string, product: 
   const newUrl = shop + '/' + product;
   return { shop, product, url: newUrl };
 }
+
+export async function pcComponentesProductHasStock(url: string): Promise<boolean> {
+
+  const htmlRes = await axios.get(url);
+  const $ = load(htmlRes.data);
+
+  const element = $('#contenedor-principal');
+  const articleId = element.attr('data-id');
+
+  const apiUrl = 'https://www.pccomponentes.pt/ajax_nc/articles/price_and_availability?idArticle=' + articleId;
+  const apiRes = await axios.get<PriceAvailabilityResponse>(apiUrl);
+
+  return apiRes.data.availability.status !== 'outOfStock';
+}
+
+// pcComponentesProductHasStock('https://www.pccomponentes.pt/cooler-master-elite-v3-600w-pfc-activo');
