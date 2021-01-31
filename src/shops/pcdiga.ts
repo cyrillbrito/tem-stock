@@ -42,8 +42,10 @@ export function isPcdiga(url: string): boolean {
   return url.startsWith('https://www.pcdiga.com');
 }
 
-export function pcdigaProductName(url: string): [string, string] {
+export function pcdigaProductInfo(url: string): { shop: string, product: string, url: string } {
+  const shop = 'pcdiga.com';
   const ss = url.split('/');
-  const name = ss[ss.length - 1].split('?')[0];
-  return ['pcdiga.com', name];
+  const product = ss[ss.length - 1].split('?')[0];
+  const newUrl = shop + '/' + product;
+  return { shop, product, url: newUrl };
 }

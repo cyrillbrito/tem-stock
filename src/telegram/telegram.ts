@@ -1,11 +1,14 @@
+import { Chat, firestore, getChat, getProduct, Product } from '../persistent/telegram-update';
 import { productInfoByUrl } from '../shops/shops';
-import { getChat, getProduct } from '../persistent/telegram-update';
-import { getStringConfig } from '../utils/configuration';
+import { getStringConfig, setConfigEnvironment } from '../utils/configuration';
 import { get, post } from '../utils/http';
 import { Message, SendMessage, Update } from './models';
 
 
 export async function processUpdate(update: Update): Promise<void> {
+  if (!update.message?.text) {
+    return;
+  }
   if (update.message.text.startsWith('/products')) {
     await products(update);
   } else if (update.message.text.startsWith('/addproduct')) {
@@ -18,8 +21,38 @@ export async function processUpdate(update: Update): Promise<void> {
 }
 
 async function products(update: Update): Promise<void> {
-  console.log('Replaying to /products');
-  // reply(update.message, JSON.stringify(db.chats[update.message.chat.id]?.map(p => p.url)));
+
+  const chatId = update.message.chat.id.toString();
+  const chat = (await firestore.collection('chats').doc(chatId).get()).data() as Chat;
+
+  const docs = await firestore.getAll(...chat.products)
+
+  const groupedByShop: { [shop: string]: Product[] } = {};
+  for (const doc of docs) {
+
+    const shopName = doc.ref.parent.parent.id;
+    const product = doc.data() as Product;
+
+    if (groupedByShop[shopName]) {
+      groupedByShop[shopName].push(product);
+    } else {
+      groupedByShop[shopName] = [product];
+    }
+  }
+
+  let message = '';
+  for (const shopName in groupedByShop) {
+    if (shopName in groupedByShop) {
+      message += `*\\-\\- ${shopName.replace('.', '\\.')}*\n`;
+      for (const product of groupedByShop[shopName]) {
+        message += `\\- [${product.name.replace(/-/g, '\\-')}](${product.url.replace(/-/g, '\\-').replace(/\./g, '\\.')}) `;
+        message += `${Math.random() > 0.5 ? '\\**IN STOCK*\\*' : 'no stock'}\n`;
+      }
+      message += '\n';
+    }
+  }
+
+  await reply(update.message, message, true);
 }
 
 async function addProduct(update: Update): Promise<void> {
@@ -27,45 +60,47 @@ async function addProduct(update: Update): Promise<void> {
   console.log('Replaying to /addproduct');
 
   const productUrl = update.message.text.replace('/addproduct ', '');
-  const [chatRef, chat] = await getChat(update.message.chat.id);
+  const { shop: shopName, product: productName, url: cleanUrl } = productInfoByUrl(productUrl);
 
-  if (chat.products.some(docRef => docRef.id === productUrl)) {
-    reply(update.message, 'The products is already included');
-    return;
-  }
-
-  const [domain, productId] = productInfoByUrl(productUrl);
-  if (!domain) {
+  if (!shopName) {
     reply(update.message, 'The product shop is not supported');
     return;
   }
 
-  const [productRef, product] = await getProduct(domain, productId);
+  const [productRef, product] = await getProduct(shopName, productName, cleanUrl);
+  const chatId = update.message.chat.id.toString();
 
-  chat.products.push(productRef);
-  chatRef.set(chat);
+  if (product.chats.some(ref => ref.id === chatId)) {
+    reply(update.message, 'The products is already included');
+    return;
+  }
+
+  const [chatRef, chat] = await getChat(update.message.chat.id);
 
   product.chats.push(chatRef);
   productRef.set(product);
 
-  reply(update.message, 'Product added successfully');
+  chat.products.push(productRef);
+  chatRef.set(chat);
 
+  reply(update.message, 'Product added successfully');
 }
 
 async function removeProduct(update: Update): Promise<void> {
+
   console.log('Replaying to /removeproduct');
 
   const chatId = update.message.chat.id.toString();
   const productUrl = update.message.text.replace('/removeproduct ', '');
 
-  const [domain, productId] = productInfoByUrl(productUrl);
-  if (!domain) {
+  const { shop: shopName, product: productName } = productInfoByUrl(productUrl);
+  if (!shopName) {
     reply(update.message, 'The product shop is not supported');
     return;
   }
 
-  const [productRef, product] = await getProduct(domain, productId);
-  if (product.chats.find(ref => ref.id === chatId)) {
+  const [productRef, product] = await getProduct(shopName, productName);
+  if (!product.chats.some(ref => ref.id === chatId)) {
     reply(update.message, 'Product not found');
     return;
   }
@@ -80,7 +115,8 @@ async function removeProduct(update: Update): Promise<void> {
 
   const [chatRef, chat] = await getChat(update.message.chat.id);
 
-  chat.products.splice(chat.products.findIndex(ref => ref.path === `/shops/${domain}/products/${productId}`), 1);
+  const productIndex = chat.products.findIndex(ref => ref.id === productName && ref.parent.parent.id === shopName);
+  chat.products.splice(productIndex, 1);
   chatRef.set(chat);
 
   reply(update.message, 'Product removed successfully');
@@ -122,5 +158,21 @@ async function httpGetTelegram<T>(command: string): Promise<T> {
 }
 
 async function httpPostTelegram<T>(command: string, body: any): Promise<T> {
-  return await post('api.telegram.org', `/bot${await getStringConfig('telegramToken')}/${command}`, body);
+  const url = `/bot${await getStringConfig('telegramToken')}/${command}`;
+  const res = await post<T>('api.telegram.org', url, body);
+  console.log('url ', url);
+  console.log('body ', body);
+  console.log('res ', res)
+  return res;
 }
+
+
+// setConfigEnvironment('local');
+// processUpdate({
+//   update_id: 123,
+//   message: {
+//     chat: { id: 377253014 },
+//     message_id: 58,
+//     text: '/products'
+//   }
+// });

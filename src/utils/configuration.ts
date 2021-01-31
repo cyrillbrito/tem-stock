@@ -1,7 +1,7 @@
 let cache: { [key: string]: string } = {};
 
 export function setConfigEnvironment(environment: string): void {
-  cache = require(`../../../environment/${environment}`);
+  cache = require(`../../environment/${environment}`);
 }
 
 export async function getStringConfig(key: string): Promise<string> {

@@ -1,7 +1,7 @@
 // import { chromium, Page } from "playwright-chromium";
 import { getBooleanConfig, getNumberConfig } from "../utils/configuration";
-import { isPcComponentes, pcComponentesProductName } from "./pc-componentes";
-import { isPcdiga, pcdigaProductName } from "./pcdiga";
+import { isPcComponentes, pcComponentesProductName as pcComponentesProductInfo } from "./pc-componentes";
+import { isPcdiga, pcdigaProductInfo } from "./pcdiga";
 // import { singleCheckGlobalData } from "./shops/globaldata";
 // import { singleCheckNovoAtalho } from "./shops/novo-atalho";
 // import { singleCheckPcComponentes } from "./shops/pc-componentes";
@@ -42,15 +42,13 @@ export async function setStockCheckInterval(getProducts: () => Promise<string[]>
 // }
 
 
-export function productInfoByUrl(url: string): [string, string] {
+export function productInfoByUrl(url: string): { shop: string, product: string, url: string } | undefined {
 
   if (isPcdiga(url)) {
-    return pcdigaProductName(url);
+    return pcdigaProductInfo(url);
   }
 
   if (isPcComponentes(url)) {
-    return pcComponentesProductName(url);
+    return pcComponentesProductInfo(url);
   }
-
-  return ['', ''];
 }

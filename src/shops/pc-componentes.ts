@@ -33,8 +33,10 @@ export function isPcComponentes(url: string): boolean {
   return url.startsWith('https://www.pccomponentes.pt');
 }
 
-export function pcComponentesProductName(url: string): [string, string] {
+export function pcComponentesProductName(url: string): { shop: string, product: string, url: string } {
+  const shop = 'pccomponentes.pt';
   const ss = url.split('/');
-  const name = ss[ss.length - 1].split('?')[0];
-  return ['pccomponentes.pt', name];
+  const product = ss[ss.length - 1].split('?')[0];
+  const newUrl = shop + '/' + product;
+  return { shop, product, url: newUrl };
 }
