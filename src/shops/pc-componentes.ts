@@ -15,7 +15,7 @@ export function pcComponentesProductName(url: string): { shop: string, product: 
   const shop = 'pccomponentes.pt';
   const ss = url.split('/');
   const product = ss[ss.length - 1].split('?')[0];
-  const newUrl = shop + '/' + product;
+  const newUrl = 'https://www.' + shop + '/' + product;
   return { shop, product, url: newUrl };
 }
 

@@ -170,7 +170,7 @@ async function reply(message: Message, text: string, markdown?: boolean): Promis
   await sendMessage(body);
 }
 
-async function sendMessage(body: SendMessage): Promise<void> {
+export async function sendMessage(body: SendMessage): Promise<void> {
   return await httpPostTelegram('sendMessage', body);
 }
 

@@ -9,7 +9,7 @@ export function pcdigaProductInfo(url: string): { shop: string, product: string,
   const shop = 'pcdiga.com';
   const ss = url.split('/');
   const product = ss[ss.length - 1].split('?')[0];
-  const newUrl = shop + '/' + product;
+  const newUrl = 'https://www.' + shop + '/' + product;
   return { shop, product, url: newUrl };
 }
 
