@@ -5,9 +5,9 @@
   "scripts": {
     "start": "tsc && node dist/clients/cli/app.js -f 'dist/prods.txt'",
     "telegram": "tsc && node dist/clients/telegram/telegram.js",
-    "temp": "tsc && node dist/telegram/bot-setup.js",
+    "temp": "tsc && node dist/telegram/telegram.js",
     "build": "tsc",
-    "deploy": "tsc & gcloud functions deploy telegramUpdate --runtime nodejs14 --trigger-http --region=europe-west2",
+    "deploy-update": "tsc & gcloud functions deploy telegramUpdate --runtime nodejs14 --trigger-http --region=europe-west2 --timeout=540",
     "deploy-webhook": "tsc & gcloud functions deploy webhook --runtime nodejs14 --trigger-http --region=europe-west2"
   },
   "dependencies": {

@@ -1,3 +1,4 @@
+import { DocumentReference } from '@google-cloud/firestore';
 import { Chat, firestore, getChat, getProduct, Product } from '../persistent/telegram-update';
 import { productInfoByUrl } from '../shops/shops';
 import { getStringConfig } from '../utils/configuration';
@@ -53,7 +54,7 @@ async function products(update: Update): Promise<void> {
       message += `*\\-\\- ${shopName.replace('.', '\\.')}*\n`;
       for (const product of groupedByShop[shopName]) {
         message += `\\- [${product.name.replace(/-/g, '\\-')}](${product.url.replace(/-/g, '\\-').replace(/\./g, '\\.')}) `;
-        message += `${Math.random() > 0.5 ? '\\.\\:\\.IN STOCK\\.\\:\\.' : 'no stock'}\n`;
+        message += `${product.inStock ? '\\.\\:\\.IN STOCK\\.\\:\\.' : 'no stock'}\n`;
       }
       message += '\n';
     }
@@ -133,8 +134,8 @@ async function removeProduct(update: Update): Promise<void> {
 async function shops(update: Update): Promise<void> {
   console.log('Replaying to /shops');
   let text = '*PCDIGA* product url example:\nhttps://www\\.pcdiga\\.com/placa\\-grafica\\-asus\\-tuf\\-gaming\\-rtx\\-3060\\-ti\\-8gb\\-gddr6\\-90yv0g11\\-m0na00';
-  text += '\n\n*Globaldata* product url example:\nhttps://www\\.globaldata\\.pt/grafica\\-msi\\-geforce\\-rtx\\-3060\\-ti\\-gaming\\-x\\-trio\\-8g\\-912\\-v390\\-053';
-  text += '\n\n*Novo Atalho* product url example:\nhttps://www\\.novoatalho\\.pt/pt\\-PT/produto/46052/Placa\\-Grafica\\-Asus\\-GeForce\\-RTX\\-3060\\-Ti\\-DUAL\\-OC\\-8GB/90YV0G12\\-M0NA00\\.html';
+  // text += '\n\n*Globaldata* product url example:\nhttps://www\\.globaldata\\.pt/grafica\\-msi\\-geforce\\-rtx\\-3060\\-ti\\-gaming\\-x\\-trio\\-8g\\-912\\-v390\\-053';
+  // text += '\n\n*Novo Atalho* product url example:\nhttps://www\\.novoatalho\\.pt/pt\\-PT/produto/46052/Placa\\-Grafica\\-Asus\\-GeForce\\-RTX\\-3060\\-Ti\\-DUAL\\-OC\\-8GB/90YV0G12\\-M0NA00\\.html';
   text += '\n\n*PcComponentes* product url example:\nhttps://www\\.pccomponentes\\.pt/evga\\-geforce\\-rtx\\-3060\\-ti\\-xc\\-8gb\\-gddr6';
   reply(update.message, text, true);
 }
@@ -197,3 +198,23 @@ async function httpPostTelegram<T>(command: string, body: any): Promise<T> {
 //     text: '/products'
 //   }
 // });
+
+
+async function cloneChat(oldChatId: string, newChatId: string): Promise<void> {
+
+  const oldChat = (await firestore.collection('chats').doc(oldChatId)?.get())?.data() as Chat;
+
+  const newChatRef = firestore.collection('chats').doc(newChatId) as DocumentReference<Chat>;
+  const newChat: Chat = { products: [] };
+
+  for (const prodRef of oldChat.products) {
+    const prod = (await prodRef.get()).data();
+    prod.chats.push(newChatRef);
+    newChat.products.push(prodRef);
+    await prodRef.set(prod);
+  }
+
+  await newChatRef.set(newChat);
+}
+
+cloneChat('377253014', '946718307')

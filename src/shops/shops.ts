@@ -12,41 +12,41 @@ export async function checkStock(): Promise<void> {
 
     switch (shopRef.id) {
       case 'pcdiga.com':
-        a.docs.forEach(async d => {
+        for (const d of a.docs) {
           const product = d.data() as Product;
           const hasStock = await pcdigaProductHasStock(product.url);
           if (hasStock !== product.inStock) {
             if (hasStock) {
               for (const chat of product.chats) {
-                sendMessage({
+                await sendMessage({
                   chat_id: Number(chat.id),
                   text: product.url,
                 });
               }
             }
             product.inStock = hasStock;
-            d.ref.set(product);
+            await d.ref.set(product);
           }
-        });
+        }
         break;
 
       case 'pccomponentes.pt':
-        a.docs.forEach(async d => {
+        for (const d of a.docs) {
           const product = d.data() as Product;
           const hasStock = await pcComponentesProductHasStock(product.url);
           if (hasStock !== product.inStock) {
             if (hasStock) {
               for (const chat of product.chats) {
-                sendMessage({
+                await sendMessage({
                   chat_id: Number(chat.id),
                   text: product.url,
                 });
               }
             }
             product.inStock = hasStock;
-            d.ref.set(product);
+            await d.ref.set(product);
           }
-        });
+        }
         break;
     }
 
