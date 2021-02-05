@@ -1,6 +1,6 @@
 {
   "name": "tem-stock",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "main": "dist/app.js",
   "scripts": {
     "start": "tsc && node dist/clients/cli/app.js -f 'dist/prods.txt'",
