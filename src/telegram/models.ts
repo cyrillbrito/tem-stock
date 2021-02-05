@@ -28,7 +28,6 @@ export interface SendMessage {
   disable_notification?: boolean;
 }
 
-
 export interface SetWebhook {
   url: string;
   drop_pending_updates: boolean

@@ -1,4 +1,5 @@
-import { firestore, Product } from "../persistent/telegram-update";
+import { Product } from "../persistent/models";
+import { firestore } from "../persistent/persistent";
 import { sendMessage } from "../telegram/telegram";
 import { isPcComponentes, pcComponentesProductHasStock, pcComponentesProductName as pcComponentesProductInfo } from "./pc-componentes";
 import { isPcdiga, pcdigaProductHasStock, pcdigaProductInfo } from "./pcdiga";

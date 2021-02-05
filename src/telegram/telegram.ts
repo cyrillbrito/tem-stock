@@ -1,9 +1,9 @@
-import { DocumentReference } from '@google-cloud/firestore';
-import { Chat, firestore, getChat, getProduct, Product } from '../persistent/telegram-update';
-import { productInfoByUrl } from '../shops/shops';
-import { getStringConfig } from '../utils/configuration';
-import { get, post } from '../utils/http';
-import { Message, SendMessage, Update } from './models';
+import axios from "axios";
+import { GetEnvString } from "../environment";
+import { Chat, Product } from "../persistent/models";
+import { firestore, getChat, getProduct } from "../persistent/persistent";
+import { productInfoByUrl } from "../shops/shops";
+import { Message, SendMessage, Update } from "./models";
 
 
 export async function processUpdate(update: Update): Promise<void> {
@@ -153,7 +153,6 @@ async function help(update: Update): Promise<void> {
   reply(update.message, text, true);
 }
 
-
 async function reply(message: Message, text: string, markdown?: boolean): Promise<void> {
 
   const body: SendMessage = {
@@ -175,46 +174,14 @@ export async function sendMessage(body: SendMessage): Promise<void> {
   return await httpPostTelegram('sendMessage', body);
 }
 
-async function httpGetTelegram<T>(command: string): Promise<T> {
-  return await get('api.telegram.org', `/bot${await getStringConfig('telegramToken')}/${command}`);
+export async function httpGetTelegram<T>(command: string): Promise<T> {
+  const url = `api.telegram.org/bot${await GetEnvString('telegramToken')}/${command}`;
+  const res = await axios.get<T>(url);
+  return res.data;
 }
 
-async function httpPostTelegram<T>(command: string, body: any): Promise<T> {
-  const url = `/bot${await getStringConfig('telegramToken')}/${command}`;
-  const res = await post<T>('api.telegram.org', url, body);
-  console.log('url ', url);
-  console.log('body ', body);
-  console.log('res ', res)
-  return res;
+export async function httpPostTelegram<T>(command: string, body: any): Promise<T> {
+  const url = `api.telegram.org/bot${await GetEnvString('telegramToken')}/${command}`;
+  const res = await axios.post<T>(url, body);
+  return res.data;
 }
-
-
-// setConfigEnvironment('local');
-// processUpdate({
-//   update_id: 123,
-//   message: {
-//     chat: { id: 377253014 },
-//     message_id: 58,
-//     text: '/products'
-//   }
-// });
-
-
-async function cloneChat(oldChatId: string, newChatId: string): Promise<void> {
-
-  const oldChat = (await firestore.collection('chats').doc(oldChatId)?.get())?.data() as Chat;
-
-  const newChatRef = firestore.collection('chats').doc(newChatId) as DocumentReference<Chat>;
-  const newChat: Chat = { products: [] };
-
-  for (const prodRef of oldChat.products) {
-    const prod = (await prodRef.get()).data();
-    prod.chats.push(newChatRef);
-    newChat.products.push(prodRef);
-    await prodRef.set(prod);
-  }
-
-  await newChatRef.set(newChat);
-}
-
-cloneChat('377253014', '946718307')

@@ -1,10 +1,10 @@
-import { getStringConfig, setConfigEnvironment } from "../utils/configuration";
-import { get, post } from "../utils/http";
-import { SetMyCommands, SetWebhook } from "./models";
+import { SetEnv } from "../environment";
+import { SetMyCommands } from "../telegram/models";
+import { httpGetTelegram, httpPostTelegram } from "../telegram/telegram";
 
 
 export async function getCommands(): Promise<void> {
-  const resp = await get('api.telegram.org', `/bot${await getStringConfig('telegramToken')}/getMyCommands`);
+  const resp = await httpGetTelegram('getMyCommands');
   console.log(resp);
 }
 
@@ -35,9 +35,9 @@ export async function setCommands(): Promise<void> {
     ]
   };
 
-  const resp = await post('api.telegram.org', `/bot${await getStringConfig('telegramToken')}/setMyCommands`, req);
+  const resp = await httpPostTelegram('setMyCommands', req);
   console.log(resp);
 }
 
-setConfigEnvironment('local');
+SetEnv('local');
 setCommands();
